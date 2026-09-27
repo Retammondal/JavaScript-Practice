@@ -12,9 +12,6 @@
 // Format dates using new Date().toLocaleDateString() and output category totals.
 
 
-
-
-
 let expenseArray = [];
 
 
