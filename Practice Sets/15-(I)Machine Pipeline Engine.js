@@ -54,7 +54,7 @@ function createPipeline(initialConfig){
         execute(...records){
             const processRecord = (item)=>{
                 return queue.reduce((acc,transformFunc)=>{
-                    // 🛑 COERCION SHIELD: Verify strictly Number and block NaN
+                    // COERCION SHIELD: Verify strictly Number and block NaN
                     if (typeof acc.value !== 'number' || Number.isNaN(acc.value)) {
                         throw new TypeError(`Type Coercion Guard Violation: value must be a strict Number. Received: ${typeof acc.value} (${acc.value})`);
                     }

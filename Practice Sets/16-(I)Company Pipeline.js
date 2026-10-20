@@ -421,3 +421,61 @@ console.log("History:", billing.history);             // Output: [20, 30, 70]
 console.log("Configuration:", billing.config);             // Output: [20, 30, 70]
 
 
+/* --------------------------------------------------------------------------------
+CONCEPT 1: PASS BY REFERENCE VS. PASS BY VALUE (THE MUTATION TRAP)
+
+📌 TRAPS WITH MUTATING OBJECTS:
+• Primitives (Numbers, Strings) pass by VALUE (a safe copy is made).
+• Objects and Arrays pass by REFERENCE (a memory pointer is shared).
+• record.value += 10 alters the EXACT object in global memory.
+• Passing the same object into two different pipelines ruins isolation because
+Pipeline B will see the mutations caused by Pipeline A.
+
+💡 THE FIX FOR IMMUTABILITY:
+Never modify the incoming argument. Always return a brand-new object using the
+Spread Operator: return { ...record, value: record.value + 10 };
+-------------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------------
+CONCEPT 2: CLOSURE PRIVACY & THE ARRAY REFERENCE LEAK
+
+📌 TRAPS WITH EXPOSING PRIVATE ARRAYS:
+• Returning history: _history from a closure DOES NOT make it safe.
+• Because arrays are references, you just handed the outside world the master key.
+• External code can execute pipeline.history.length = 0; and instantly
+wipe out your private, "protected" closure memory.
+
+💡 THE FIX FOR STRICT ENCAPSULATION:
+Always return a disconnected clone of the array. Use an ES6 Getter combined
+with the Spread Operator: get history() { return [..._history]; }
+-------------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------------
+CONCEPT 3: THE REDUCE BATON PASS & SHAPE MATCHING
+
+📌 TRAPS WITH DATA SHAPE MORPHING:
+• Array.reduce() strictly passes the output of Step 1 as the input to Step 2.
+• If Step 1 receives { id: 1, value: 10 } but returns just the number 20...
+• Step 2's accumulator becomes 20.
+• If Step 2 tries to access acc.value, it evaluates 20.value, which is undefined.
+• The pipeline silently corrupts the data or crashes on the next step.
+
+💡 THE FIX FOR SHAPE MATCHING:
+Enforce a strict Data Contract. Whatever structural shape goes into the pipeline
+MUST be the exact structural shape returned by every single transformation function.
+-------------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------------
+CONCEPT 4: BATCH EXECUTION ISOLATION (FAIL-SAFE ITERATION)
+
+📌 TRAPS WITH .map() IN TRANSACTIONAL PROCESSING:
+• records.map(processRecord) is elegant but fundamentally brittle for batches.
+• If processing record 2 throws a Validation Error, the .map() method explodes.
+• Records 3, 4, and 5 will NEVER be processed, and history is never saved.
+• One bad data entry destroys the entire batch operation.
+
+💡 THE FIX FOR FAULT TOLERANCE:
+Abandon .map() for isolated batch processing. Use a for...of loop wrapped
+around a try...catch block. This catches the error locally, logs it, and safely
+continues to the next iteration.
+-------------------------------------------------------------------------------- */
